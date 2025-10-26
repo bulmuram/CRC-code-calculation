@@ -1,65 +1,147 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Binary = 1 | 0;
+type BinaryList = Binary[];
+type Levels = {
+  [key: number]: {
+    list: BinaryList;
+    shiftIndex: number;
+    answer: boolean;
+  };
+};
 
 export default function Home() {
+  const [showLevel, setShowLevel] = useState<number>(0);
+  // const data: BinaryList = useMemo(() => [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1], []);
+  const data: BinaryList = useMemo(() => [1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0], []);
+  const key: BinaryList = useMemo(() => [1, 0, 1, 0, 1], []);
+
+  const levels: Levels = useMemo(() => {
+    const localLevels: Levels = {
+      0: { list: data.slice(0, key.length), shiftIndex: -1, answer: false },
+    };
+
+    for (
+      let shiftIndex = 0;
+      shiftIndex <= data.length - key.length;
+      shiftIndex++
+    ) {
+      let result: BinaryList;
+
+      const currentLocalLevel: BinaryList = JSON.parse(
+        JSON.stringify(localLevels[shiftIndex].list)
+      );
+
+      const selectedData: Binary = data[key.length + shiftIndex];
+
+      if (currentLocalLevel[shiftIndex] === 1) {
+        const xorData = currentLocalLevel.map((data, i) => {
+          if (i < shiftIndex) {
+            return 0;
+          }
+
+          if (key[i - shiftIndex] + data === 1) {
+            return 1;
+          } else {
+            return 0;
+          }
+        });
+
+        if (selectedData !== undefined) {
+          result = [...xorData, selectedData];
+        } else {
+          result = xorData;
+        }
+      } else {
+        if (selectedData !== undefined) {
+          result = [...currentLocalLevel, selectedData];
+        } else {
+          result = currentLocalLevel;
+        }
+      }
+
+      localLevels[shiftIndex + 1] = {
+        list: result,
+        shiftIndex,
+        answer: shiftIndex + key.length === data.length,
+      };
+    }
+
+    return localLevels;
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="w-full min-h-screen p-20 ">
+      <div className="flex items-center justify-end gap-2 mb-5">
+        <button
+          onClick={() => setShowLevel((p) => p + 1)}
+          className="cursor-pointer rounded-md bg-indigo-700 px-3 py-1 text-sm text-white transition active:scale-[.95]"
+        >
+          Next
+        </button>
+        <button
+          onClick={() => setShowLevel(0)}
+          className="cursor-pointer rounded-md bg-orange-700 px-3 py-1 text-sm text-white transition active:scale-[.95]"
+        >
+          Reset
+        </button>
+      </div>
+      <div className="w-fit **:ml-8 ml-8 ">
+        {data.map((d) => (
+          <span className="text-indigo-500" key={Math.random()}>
+            {d}
+          </span>
+        ))}
+      </div>
+
+      <div className="w-fit">
+        {data.length > 0 &&
+          Object.entries(levels).map(([level, values]) => (
+            <div
+              key={level}
+              className={`transition duration-300 relative ${
+                +level <= showLevel ? "opacity-100" : "opacity-0"
+              } `}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <div className="**:ml-8 ">
+                <div>
+                  <span className="text-gray-600 absolute left-0">{level}</span>
+                  {values.list.map((value, i) => (
+                    <span
+                      className={
+                        i < values.shiftIndex + 1
+                          ? "relative text-red-300 before:absolute before:w-4 before:h-0.5 before:bg-red-300 before:-rotate-45 before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2"
+                          : values.answer
+                          ? "underline text-indigo-500"
+                          : i === values.list.length - 1 && i >= key.length
+                          ? "text-emerald-500"
+                          : "text-white"
+                      }
+                      key={i}
+                    >
+                      {value}
+                    </span>
+                  ))}
+                </div>
+                {data.length > 0 && !values.answer && (
+                  <div className="relative text-gray-600">
+                    <span className="absolute -left-12 text-sm">Key:</span>
+                    {Array.from({ length: +level }).map((_, i) => (
+                      <span className="opacity-0" key={i}>
+                        0
+                      </span>
+                    ))}
+                    {key.map((value, i) => (
+                      <span key={i}>{value}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
