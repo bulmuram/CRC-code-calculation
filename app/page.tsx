@@ -14,6 +14,10 @@ type Levels = {
 
 export default function Home() {
   const [showLevel, setShowLevel] = useState<number>(0);
+  const [data, setData] = useState<BinaryList>([
+    1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0,
+  ]);
+  const [key, setKey] = useState<BinaryList>([1, 0, 1, 0, 1]);
   const [crcCode, setCrcCode] = useState<BinaryList>();
   const [drawAnswerBox, setDrawAnswerBox] = useState({
     top: 0,
@@ -23,9 +27,6 @@ export default function Home() {
   });
   const answerBoxLeft = useRef(null);
   const answerBoxRight = useRef(null);
-  // const data: BinaryList = useMemo(() => [1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1], []);
-  const data: BinaryList = useMemo(() => [1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0], []);
-  const key: BinaryList = useMemo(() => [1, 0, 1, 0, 1], []);
 
   const levels: Levels = useMemo(() => {
     const localLevels: Levels = {
@@ -84,7 +85,7 @@ export default function Home() {
       )
     );
     return localLevels;
-  }, []);
+  }, [key, data]);
 
   useEffect(() => {
     if (!answerBoxLeft.current && !answerBoxRight.current) return;
@@ -100,25 +101,77 @@ export default function Home() {
       bottom: left.bottom,
       right: right.right,
     });
-  }, [answerBoxLeft, answerBoxRight]);
+  }, [key, data]);
 
   return (
     <div className="w-full min-h-screen p-20 ">
-      <div className="flex items-center justify-end gap-2 mb-5">
-        <button
-          onClick={() => setShowLevel((p) => p + 1)}
-          className="cursor-pointer rounded-md bg-indigo-700 px-3 py-1 text-sm text-white transition active:scale-[.95]"
-        >
-          Next
-        </button>
-        <button
-          onClick={() => setShowLevel(0)}
-          className="cursor-pointer rounded-md bg-orange-700 px-3 py-1 text-sm text-white transition active:scale-[.95]"
-        >
-          Reset
-        </button>
+      <div className="flex items-end justify-between">
+        <div className="flex gap-5">
+          <div className="w-sm">
+            <label
+              htmlFor="data-input"
+              className="block mb-2 text-sm font-medium text-white"
+            >
+              Data:
+            </label>
+            <input
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[0-1\b]+$/.test(value[value.length - 1])) {
+                  if (value.length > data.length) {
+                    setData((p) => [...p, +value[value.length - 1] as Binary]);
+                  } else {
+                    setData((p) => [...p.slice(0, p.length - 1)]);
+                  }
+                }
+              }}
+              value={Number(data.toString().replaceAll(",", ""))}
+              type="number"
+              id="data-input"
+              className="block w-full p-2 text-xs bg-gray-800 rounded-md focus-within:ring ring-indigo-500! outline-0! tracking-[0.3rem]"
+            />
+          </div>
+          <div className="w-sm">
+            <label
+              htmlFor="key-input"
+              className="block mb-2 text-sm font-medium text-white"
+            >
+              Key:
+            </label>
+            <input
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[0-1\b]+$/.test(value[value.length - 1])) {
+                  if (value.length > key.length) {
+                    setKey((p) => [...p, +value[value.length - 1] as Binary]);
+                  } else {
+                    setKey((p) => [...p.slice(0, p.length - 1)]);
+                  }
+                }
+              }}
+              value={Number(key.toString().replaceAll(",", ""))}
+              type="number"
+              id="key-input"
+              className="block w-full p-2 text-xs bg-gray-800 rounded-md focus-within:ring ring-indigo-500! outline-0! tracking-[0.3rem]"
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => setShowLevel((p) => p + 1)}
+            className="cursor-pointer rounded-md bg-indigo-700 px-3 py-1 text-sm text-white transition active:scale-[.95]"
+          >
+            Next
+          </button>
+          <button
+            onClick={() => setShowLevel(0)}
+            className="cursor-pointer rounded-md bg-orange-700 px-3 py-1 text-sm text-white transition active:scale-[.95]"
+          >
+            Reset
+          </button>
+        </div>
       </div>
-      <div className="w-fit **:ml-8 ml-8 ">
+      <div className="w-fit **:ml-8 ml-8 mt-10">
         {data.map((d) => (
           <span className="text-indigo-500" key={Math.random()}>
             {d}
@@ -130,19 +183,17 @@ export default function Home() {
         {data.length > 0 &&
           Object.entries(levels).map(([level, values]) => (
             <div key={level}>
-              {+level <= showLevel && values.answer && (
-                <div
-                  style={{
-                    width: `${drawAnswerBox.right - drawAnswerBox.left + 10}px`,
-                    height: `${
-                      drawAnswerBox.bottom - drawAnswerBox.top + 10
-                    }px`,
-                    left: `${drawAnswerBox.left - 5}px`,
-                    top: `${drawAnswerBox.top - 5}px`,
-                  }}
-                  className="absolute border border-indigo-500 rounded-md bg-indigo-950"
-                />
-              )}
+              <div
+                style={{
+                  width: `${drawAnswerBox.right - drawAnswerBox.left + 10}px`,
+                  height: `${drawAnswerBox.bottom - drawAnswerBox.top + 10}px`,
+                  left: `${drawAnswerBox.left - 5}px`,
+                  top: `${drawAnswerBox.top - 5}px`,
+                  opacity: +level <= showLevel && values.answer ? "100%" : "0",
+                }}
+                className="absolute border border-indigo-500 rounded-md bg-indigo-950 transition duration-500"
+              />
+
               <div
                 className={`transition duration-300 relative ${
                   +level <= showLevel ? "opacity-100" : "opacity-0"
