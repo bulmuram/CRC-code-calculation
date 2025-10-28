@@ -30,16 +30,21 @@ const CrcCalc = () => {
         {data.length > 0 &&
           Object.entries(levels).map(([level, values]) => (
             <div key={level}>
-              <div
-                style={{
-                  width: `${drawAnswerBox.right - drawAnswerBox.left + 10}px`,
-                  height: `${drawAnswerBox.bottom - drawAnswerBox.top + 10}px`,
-                  left: `${drawAnswerBox.left - 5}px`,
-                  top: `${drawAnswerBox.top - 5}px`,
-                  opacity: +level <= showLevel && values.answer ? "100%" : "0",
-                }}
-                className="absolute border border-indigo-500 rounded-md bg-indigo-950 transition duration-500"
-              />
+              {values.answer && (
+                <div
+                  style={{
+                    width: `${drawAnswerBox.right - drawAnswerBox.left + 10}px`,
+                    height: `${
+                      drawAnswerBox.bottom - drawAnswerBox.top + 10
+                    }px`,
+                    left: `${drawAnswerBox.left - 5}px`,
+                    top: `${drawAnswerBox.top - 5}px`,
+                    opacity:
+                      +level <= showLevel && values.answer ? "100%" : "0",
+                  }}
+                  className="absolute border border-indigo-500 rounded-md bg-indigo-950 transition duration-500"
+                />
+              )}
 
               <div
                 className={`transition duration-300 relative ${
